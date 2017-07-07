@@ -1,5 +1,8 @@
 import numpy as np
 import math
+import progressbar
+import time
+
 base = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
 
@@ -55,20 +58,44 @@ def train_nn(train_file, input_size, neuron_size, learning_rate, path, weights_f
 
 
 def train_loop(epoch):
-    for _ in range(epoch):
-        train_nn('/Users/rubenbranco/Desktop/neuralnetwork/mnist_train.csv', 784, 6, 0.1,'/Users/rubenbranco/Desktop/neuralnetwork/','/Users/rubenbranco/Desktop/neuralnetwork/weights.npy')
+    bar = progressbar.ProgressBar()
+    for _ in bar(range(epoch)):
+        time.sleep(0.02)
+        train_nn('C:/Users/Ruben/Desktop/neuralnetwork/mnist_train.csv', 784, 6, 0.1,'C:/Users/Ruben/Desktop/neuralnetwork/','C:/Users/Ruben/Desktop/neuralnetwork/weights.npy')
 
-def guess():
+
+def accuracy_measure(test_file, weight_file):
+    total = 0
+    right_guesses = 0
+    weights = np.load(weight_file)
+    with open(test_file) as file:
+        for line in file:
+            split_line = line.split(',')
+            num = split_line[0]
+            input_matrix = []
+            for i in range(1,len(split_line)):
+                input_matrix.append([int(split_line[i])])
+            input_matrix.append([1])
+            res = perceptron(weights, np.mat(input_matrix))
+            total += 1
+            if str(res) == str(num):
+                right_guesses += 1
+    return right_guesses / float(total)
+
+
+def guess(test_file, weight_file):
     line = ''
-    with open('/Users/rubenbranco/Desktop/neuralnetwork/mnist_test.csv') as file:
+    with open(test_file) as file:
         for _ in range(8):
             line = file.readline()
     split_line = line.split(',')
     num = split_line[0]
-    weights = np.load('/Users/rubenbranco/Desktop/neuralnetwork/weights.npy')
+    weights = np.load(weight_file)
     input_matrix = []
     for i in range(1, len(split_line)):
         input_matrix.append([int(split_line[i])])
     input_matrix.append([1])
     res = perceptron(weights, np.mat(input_matrix))
     return num, res
+#train_loop(10)
+#print(accuracy_measure('C:/Users/Ruben/Desktop/neuralnetwork/mnist_test.csv','C:/Users/Ruben/Desktop/neuralnetwork/weights.npy'))
