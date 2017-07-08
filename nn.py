@@ -57,11 +57,11 @@ def train_nn(train_file, input_size, neuron_size, learning_rate, path, weights_f
             np.save(path+'weights.npy', weights)
 
 
-def train_loop(epoch):
+def train_loop(epoch,train_file,path,weights_file,input_size,neuron_size,learning_rate):
     bar = progressbar.ProgressBar()
     for _ in bar(range(epoch)):
         time.sleep(0.02)
-        train_nn('C:/Users/Ruben/Desktop/neuralnetwork/mnist_train.csv', 784, 6, 0.1,'C:/Users/Ruben/Desktop/neuralnetwork/','C:/Users/Ruben/Desktop/neuralnetwork/weights.npy')
+        train_nn(train_file, input_size, neuron_size, learning_rate, path, weights_file)
 
 
 def accuracy_measure(test_file, weight_file):
@@ -97,5 +97,3 @@ def guess(test_file, weight_file):
     input_matrix.append([1])
     res = perceptron(weights, np.mat(input_matrix))
     return num, res
-#train_loop(10)
-#print(accuracy_measure('C:/Users/Ruben/Desktop/neuralnetwork/mnist_test.csv','C:/Users/Ruben/Desktop/neuralnetwork/weights.npy'))
