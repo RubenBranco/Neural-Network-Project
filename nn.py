@@ -1,99 +1,57 @@
-import numpy as np
-import math
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 import progressbar
-import time
-
-base = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
 
-def sigmoid(x):
-    return math.exp(-np.logaddexp(0, -x))
+class NeuralNetwork:
+    def __init__(self, n_layer1, n_layer2, n_input, n_classes, weights_path=None):
+        self.hidden1 = n_layer1
+        self.hidden2 = n_layer2
+        self.n_input = n_input
+        self.n_classes = n_classes
+        self.x = tf.placeholder("float", [None, n_input])
+        self.y = tf.placeholder("float", [None, n_classes])
+        if weights_path is None:
+            self.weights = {
+                'wl1': tf.get_variable("wl1", shape = [n_input, n_layer1], initializer = tf.contrib.layers.xavier_initializer()),
+                'wl2': tf.get_variable("wl2", shape = [n_layer1, n_layer2], initializer = tf.contrib.layers.xavier_initializer()),
+                'wout': tf.get_variable("wout", shape = [n_layer2, n_classes], initializer = tf.contrib.layers.xavier_initializer()),
+                'wb1': tf.get_variable("wb1", shape = [n_layer1], initializer = tf.contrib.layers.xavier_initializer()),
+                'wb2': tf.get_variable("wb2", shape = [n_layer2], initializer = tf.contrib.layers.xavier_initializer()),
+                'wbout': tf.get_variable('wbout', shape = [n_classes], initializer = tf.contrib.layers.xavier_initializer())
+            }
+        else:
+            self.weights = None
+            self.weights_path = weights_path
+        self.data = input_data.read_data_sets("MNIST_data/", one_hot=True)
+        self.pmodel = self.model()
+
+    def model(self):
+        hidden_layer_1 = tf.nn.relu(tf.add(tf.matmul(self.x, self.weights['wl1']), self.weights['wb1']))
+        hidden_layer_2 = tf.nn.relu(tf.add(tf.matmul(hidden_layer_1, self.weights['wl2']), self.weights['wb2']))
+        return tf.matmul(hidden_layer_2, self.weights['wout']) + self.weights['wbout']
+
+    def train(self, epochs, learning_rate):
+        cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.pmodel, labels=self.y))
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+        var_init = tf.global_variables_initializer()
+        with tf.Session() as session:
+            session.run(var_init)
+            bar = progressbar.ProgressBar()
+            saver = tf.train.Saver()
+            if self.weights is None:
+                saver.restore(session, self.weights_path)
+            for _ in bar(range(epochs)):
+                training_data = int(self.data.train.num_examples/100)
+                for i in range(training_data):
+                    image, label = self.data.train.next_batch(100)
+                    _, c = session.run([optimizer, cost], feed_dict={self.x: image, self.y: label})
+            correct_prediction = tf.equal(tf.argmax(self.pmodel, 1), tf.argmax(self.y, 1))
+            accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+            print(accuracy.eval({self.x: self.data.test.images, self.y: self.data.test.labels}))
+
+if __name__ == '__main__':
+    nn = NeuralNetwork(256, 256, 784, 10)
+    nn.train(20, 0.001)
 
 
-def init_weights(input_size, neuron_size):
-    initial_weights = []
-    r = 4*math.sqrt(6/(input_size+1))
-    for _ in range(neuron_size):
-        weights = []
-        for i in range(input_size+1):
-            weights.append(np.random.uniform(-r, r))
-        initial_weights.append(weights)
-    return np.mat(initial_weights)
-
-
-def perceptron(weights_matrix, input_matrix):
-    hidden_inputs = weights_matrix * input_matrix
-    binary_num = ''
-    for i in range(len(hidden_inputs)):
-        activation_function_output = round(sigmoid(hidden_inputs.item(i)))
-        binary_num += str(activation_function_output)
-    value = int(binary_num, 2)
-    return base[value]
-
-
-def train_nn(train_file, input_size, neuron_size, learning_rate, path, weights_file=False):
-    weights = []
-    if weights_file:
-        weights = np.load(path+'weights.npy')
-    else:
-        weights = init_weights(input_size, neuron_size)
-    with open(train_file) as training_file:
-        for line in training_file:
-            input_matrix = []
-            split_line = line.split(',')
-            label = split_line[0]
-            for i in range(1,len(split_line)):
-                input_matrix.append([int(split_line[i])])
-            input_matrix.append([1])
-            percepton_guess = perceptron(weights, np.mat(input_matrix))
-            percepton_guess_binary = bin(base.index(percepton_guess))[2:]
-            label_binary = bin(base.index(label))[2:]
-            percepton_guess_binary = '0'*(6-len(percepton_guess_binary)) + percepton_guess_binary
-            label_binary = '0'*(6-len(label_binary)) + label_binary
-            for i in range(neuron_size):
-                error = int(label_binary[i]) - int(percepton_guess_binary[i])
-                for j in range(input_size + 1):
-                    weights[i, j] += learning_rate * error * input_matrix[j][0]
-            np.save(path+'weights.npy', weights)
-
-
-def train_loop(epoch,train_file,path,weights_file,input_size,neuron_size,learning_rate):
-    bar = progressbar.ProgressBar()
-    for _ in bar(range(epoch)):
-        time.sleep(0.02)
-        train_nn(train_file, input_size, neuron_size, learning_rate, path, weights_file)
-
-
-def accuracy_measure(test_file, weight_file):
-    total = 0
-    right_guesses = 0
-    weights = np.load(weight_file)
-    with open(test_file) as file:
-        for line in file:
-            split_line = line.split(',')
-            num = split_line[0]
-            input_matrix = []
-            for i in range(1,len(split_line)):
-                input_matrix.append([int(split_line[i])])
-            input_matrix.append([1])
-            res = perceptron(weights, np.mat(input_matrix))
-            total += 1
-            if str(res) == str(num):
-                right_guesses += 1
-    return right_guesses / float(total)
-
-
-def guess(test_file, weight_file):
-    line = ''
-    with open(test_file) as file:
-        for _ in range(8):
-            line = file.readline()
-    split_line = line.split(',')
-    num = split_line[0]
-    weights = np.load(weight_file)
-    input_matrix = []
-    for i in range(1, len(split_line)):
-        input_matrix.append([int(split_line[i])])
-    input_matrix.append([1])
-    res = perceptron(weights, np.mat(input_matrix))
-    return num, res
