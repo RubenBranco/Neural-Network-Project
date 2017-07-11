@@ -4,13 +4,14 @@ import progressbar
 
 
 class NeuralNetwork:
-    def __init__(self, n_layer1, n_layer2, n_input, n_classes, weights_path=None):
+    def __init__(self, n_layer1, n_layer2, n_input, n_classes, save_path, weights_path=None):
         self.hidden1 = n_layer1
         self.hidden2 = n_layer2
         self.n_input = n_input
         self.n_classes = n_classes
         self.x = tf.placeholder("float", [None, n_input])
         self.y = tf.placeholder("float", [None, n_classes])
+        self.save_path = save_path
         if weights_path is None:
             self.weights = {
                 'wl1': tf.get_variable("wl1", shape = [n_input, n_layer1], initializer = tf.contrib.layers.xavier_initializer()),
@@ -45,13 +46,27 @@ class NeuralNetwork:
                 training_data = int(self.data.train.num_examples/100)
                 for i in range(training_data):
                     image, label = self.data.train.next_batch(100)
+                    print(image)
+                    print(label)
                     _, c = session.run([optimizer, cost], feed_dict={self.x: image, self.y: label})
+
             correct_prediction = tf.equal(tf.argmax(self.pmodel, 1), tf.argmax(self.y, 1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-            print(accuracy.eval({self.x: self.data.test.images, self.y: self.data.test.labels}))
+            print('Accuracy: ' + str(accuracy.eval({self.x: self.data.test.images, self.y: self.data.test.labels})))
+            saver.save(session, self.save_path)
+
+    def accuracy_measure(self):
+        correct_prediction = tf.equal(tf.argmax(self.pmodel, 1), tf.argmax(self.y, 1))
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+        print('Accuracy: ' + str(accuracy.eval({self.x: self.data.test.images, self.y: self.data.test.labels})))
+
+    def predict(self):
+
 
 if __name__ == '__main__':
-    nn = NeuralNetwork(256, 256, 784, 10)
-    nn.train(20, 0.001)
+    #Example
+    # nn = NeuralNetwork(256, 256, 784, 10, '.')
+    # nn.train
+
 
 
