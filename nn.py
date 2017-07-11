@@ -22,6 +22,7 @@ class NeuralNetwork:
                 'wbout': tf.get_variable('wbout', shape = [n_classes], initializer = tf.contrib.layers.xavier_initializer())
             }
         else:
+            
             self.weights = None
             self.weights_path = weights_path
         self.data = input_data.read_data_sets("MNIST_data/", one_hot=True)
@@ -46,27 +47,29 @@ class NeuralNetwork:
                 training_data = int(self.data.train.num_examples/100)
                 for i in range(training_data):
                     image, label = self.data.train.next_batch(100)
-                    print(image)
-                    print(label)
                     _, c = session.run([optimizer, cost], feed_dict={self.x: image, self.y: label})
 
             correct_prediction = tf.equal(tf.argmax(self.pmodel, 1), tf.argmax(self.y, 1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
             print('Accuracy: ' + str(accuracy.eval({self.x: self.data.test.images, self.y: self.data.test.labels})))
-            saver.save(session, self.save_path)
+            saver.save(session, self.save_path + 'model.ckpt')
 
-    def accuracy_measure(self):
-        correct_prediction = tf.equal(tf.argmax(self.pmodel, 1), tf.argmax(self.y, 1))
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-        print('Accuracy: ' + str(accuracy.eval({self.x: self.data.test.images, self.y: self.data.test.labels})))
+    def accuracy_measure(self, session_path):
+        with tf.Session() as session:
+            session.run(tf.global_variables_initializer())
+            tf.train.Saver().restore(session, session_path)
+            correct_prediction = tf.equal(tf.argmax(self.pmodel, 1), tf.argmax(self.y, 1))
+            accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+            print('Accuracy: ' + str(accuracy.eval({self.x: self.data.test.images, self.y: self.data.test.labels})))
 
     def predict(self):
-
+        pass
 
 if __name__ == '__main__':
     #Example
-    # nn = NeuralNetwork(256, 256, 784, 10, '.')
-    # nn.train
+    #nn = NeuralNetwork(256, 256, 784, 10, './model.ckpt')
+    #nn.train(15, 0.001)
+    #nn.accuracy_measure('./model.ckpt')
 
 
 
