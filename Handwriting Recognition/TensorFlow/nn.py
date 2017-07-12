@@ -22,7 +22,6 @@ class NeuralNetwork:
                 'wbout': tf.get_variable('wbout', shape = [n_classes], initializer = tf.contrib.layers.xavier_initializer())
             }
         else:
-            
             self.weights = None
             self.weights_path = weights_path
         self.data = input_data.read_data_sets("MNIST_data/", one_hot=True)
@@ -48,7 +47,6 @@ class NeuralNetwork:
                 for i in range(training_data):
                     image, label = self.data.train.next_batch(100)
                     _, c = session.run([optimizer, cost], feed_dict={self.x: image, self.y: label})
-
             correct_prediction = tf.equal(tf.argmax(self.pmodel, 1), tf.argmax(self.y, 1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
             print('Accuracy: ' + str(accuracy.eval({self.x: self.data.test.images, self.y: self.data.test.labels})))
@@ -62,8 +60,6 @@ class NeuralNetwork:
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
             print('Accuracy: ' + str(accuracy.eval({self.x: self.data.test.images, self.y: self.data.test.labels})))
 
-    def predict(self):
-        pass
 
 if __name__ == '__main__':
     #Example
