@@ -1,6 +1,7 @@
 import json
 import re
 import os
+import operator
 
 
 class ChatParser:
@@ -29,6 +30,15 @@ class ChatParser:
                                             except:
                                                 new_line = chat_line.encode('ascii', 'ignore') + b'\n'
                                                 file_writer.write(new_line.decode('utf-8'))
+
+    def tokenize(self, log_file, new_log_file_name):
+        num_lines = 0 # Might as well get to know the size
+        with open(log_file) as file:
+            with open(new_log_file_name, 'w') as file_writer:
+                for line in file:
+                    file_writer.write('<SOS>'+line.strip('\n')+'<EOS>\n')
+                    num_lines += 1
+        print(num_lines)
 
 
 if __name__ == '__main__':
