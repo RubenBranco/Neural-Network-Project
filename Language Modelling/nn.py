@@ -121,7 +121,7 @@ class RecurrentNeuralNetwork:
                         sample = weighted_pick(p)
                     else:
                         sample = np.argmax(p)
-                else:  # sampling_type == 1 default:
+                else:
                     sample = weighted_pick(p)
 
                 pred = self.vocab[int(sample)]
