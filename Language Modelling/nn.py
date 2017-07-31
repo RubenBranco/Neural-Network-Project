@@ -34,7 +34,7 @@ class RecurrentNeuralNetwork:
 
     @property
     def vocabulary(self):
-        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!?:,;-_^~\\|´`/*+\'=)(&%$#"€@§¡ºªãñçáàéèóòôÃÑÇÁÁÉÈÓÒÔ 0123456789'
+        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!?.:,;-_^~><\\|´`/*+\'=)(&%$#"€@§¡ºªãñçáàéèóòôÃÑÇÁÁÉÈÓÒÔ 0123456789'
 
     def train(self, train_file, epochs, learning_rate, batch_size, grad_clip, ckpt_file = None):
         self.targets = tf.placeholder(tf.int32, [batch_size, self.max_seq_size])

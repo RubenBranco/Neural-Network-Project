@@ -45,21 +45,22 @@ class DataLoad:
 class DataFormat:
     @property
     def vocab(self):
-        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!?:,;-_^~\\|´`/*+\'=)(&%$#"€@§¡ºªãñçáàéèóòôÃÑÇÁÁÉÈÓÒÔ 0123456789'
+        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!?.:,;-_^~><\\|´`/*+\'=)([]ößü&%$#"€@§¡ºªãñçáàéèóòôÃÑÇÁÁÉÈÓÒÔ 0123456789'
 
     def max_len(self, train_file):
         max_length = 0
         vocab = self.vocab
+        missing_chars = ''
         with open(train_file) as file_reader:
             for line in file_reader:
                 if len(line) > max_length:
                     max_length = len(line)
                 for char in line:
-                    if char not in vocab:
-                        print(char)
+                    if char not in vocab and char not in missing_chars:
+                        missing_chars += char
         with open('maxseqsize.config', 'w') as file:
             file.write(str(max_length))
-        return max_length
+        return missing_chars
 
     def one_hot(self, string):
         vocab = self.vocab
@@ -77,3 +78,7 @@ class DataFormat:
         with open(file_name) as file:
             seq_len = int(file.read())
         return seq_len
+
+if __name__ == '__main__':
+    data_format = DataFormat()
+    print(data_format.max_len('twitch.log'))
