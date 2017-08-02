@@ -11,7 +11,7 @@ class RecurrentNeuralNetwork:
         self.lstm_model = self.model
         self.vocab = self.vocabulary
         self.vocab_size = len(self.vocab)
-        self.max_seq_size = 0
+        self.max_seq_size = DataFormat.seq_len(seq_config_file)
         self.input_data = tf.placeholder(tf.int32, [batch_size, self.max_seq_size])
         self.targets = None
         self.initial_state = self.lstm_model.zero_state(batch_size, tf.float32)
@@ -25,7 +25,6 @@ class RecurrentNeuralNetwork:
         self.train_op = None
         self.final_state = None
         self.lr = None
-        self.max_seq_size = DataFormat.seq_len(seq_config_file)
 
     @property
     def model(self):
@@ -34,16 +33,17 @@ class RecurrentNeuralNetwork:
 
     @property
     def vocabulary(self):
-        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!?.:,;-_^~><\\|´`/*+\'=)(&%$#"€@§¡ºªãñçáàéèóòôÃÑÇÁÁÉÈÓÒÔ 0123456789'
+        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!?.:,;-_^~><\\|´`/*+\'«»=÷)({}[]ößü&%$#"€£@§¡¿ºªãñçâáàâéèêóòôõúùíìîýỳÃÑÇÂÂÁÀÉÈÊÓÒÔÍÌÚÙÝỲÕÎ 0123456789'
 
-    def train(self, train_file, epochs, learning_rate, batch_size, grad_clip, ckpt_file = None):
+    def train(self, train_file, epochs, learning_rate, batch_size, grad_clip, ckpt_file=None):
         self.targets = tf.placeholder(tf.int32, [batch_size, self.max_seq_size])
         self.weights = tf.get_variable("weights", [self.lstm_size, self.vocab_size])
         self.embedding_matrix = tf.get_variable('embedding_matrix', [self.vocab_size, self.lstm_size])
         self.embedded_inputs = tf.nn.embedding_lookup(self.embedding_matrix, self.input_data)
-        masked_embedded = tf.concat(0,[tf.zeros([1,1]), tf.ones([self.embedding_matrix.get_shape()[0]-1,1])])
+        masked_embedded = tf.concat([tf.zeros([1, 1]), tf.ones([self.embedding_matrix.get_shape()[0]-1, 1])], 0)
         self.embedded_inputs = tf.matmul(self.embedded_inputs, tf.nn.embedding_lookup(masked_embedded, self.input_data))
         inputs = [input_ for input_ in tf.split(self.embedded_inputs, self.max_seq_size, 1)]
+        print(inputs)
 
         def loop(self_obj, prev, _):
             prev = tf.matmul(prev, self_obj.weights) + self_obj.bias
@@ -128,3 +128,7 @@ class RecurrentNeuralNetwork:
                 text += pred
                 prev_char = pred
             return text.encode('utf-8')
+
+if __name__ == '__main__':
+    nn = RecurrentNeuralNetwork(1005, 2, 'maxseqsize.config', 50)
+    nn.train('/home/ruben/PycharmProjects/Ruben/twitch.log', 2, 0.001, 50, 5.0)
